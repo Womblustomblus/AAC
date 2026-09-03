@@ -246,13 +246,14 @@ c.InputBegan:Connect(function(input,gp)
     end
 end)
 -- tab switching
-for _,b in ipairs(tabBar:GetChildren())do
-    if b:IsA("TextButton")then
-        b.MouseButton1Click:Connect(function()
+for _,btn in ipairs(tabBar:GetChildren())do
+    if btn:IsA("TextButton")then
+        local thisBtn = btn
+        thisBtn.MouseButton1Click:Connect(function()
             for _,f in ipairs(content:GetChildren())do if f:IsA("Frame")then f.Visible=false end end
-            content:FindFirstChild(b.Name).Visible=true
-            for _,x in ipairs(tabBar:GetChildren())do if x:IsA("TextButton")then x.BackgroundColor3=x==b and Color3.fromRGB(88,166,255)or Color3.fromRGB(50,53,59) end end
+            local target = content:FindFirstChild(thisBtn.Name)
+            if target then target.Visible=true end
+            for _,x in ipairs(tabBar:GetChildren())do if x:IsA("TextButton")then x.BackgroundColor3=x==thisBtn and Color3.fromRGB(88,166,255) or Color3.fromRGB(50,53,59) end end
         end)
     end
 end
-print("pickler! full hub loaded - Stats/Items/Unlocks/Settings ready")
