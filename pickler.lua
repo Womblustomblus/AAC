@@ -6,7 +6,6 @@ if h:FindFirstChild("StatHub") then h.StatHub:Destroy() end
 local RS=game:GetService("ReplicatedStorage")
 local UIS=game:GetService("UserInputService")
 print("[AAC] loading...")
-
 local remotes={}
 for _,v in ipairs(game:GetDescendants()) do if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then remotes[v.Name:lower()]=v print("[AAC] found remote: "..v:GetFullName()) end end
 local function find(names) for _,n in ipairs(names) do if remotes[n:lower()] then return remotes[n:lower()] end for k,v in pairs(remotes) do if k:find(n:lower()) then return v end end end return nil end
@@ -15,9 +14,8 @@ local itemRemote=find({"GiveItem","AddItem","GetItem","Item","Inventory"})
 local unlockRemote=find({"SetAchievement","Achievement","Unlock"})
 local generic= (RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("TesterRemote")) or find({"Remote","Event"})
 print("[AAC] stat="..tostring(statRemote).." item="..tostring(itemRemote).." generic="..tostring(generic))
-
-local function fire(r,...) if r then pcall(function() if r:IsA("RemoteEvent") then r:FireServer(...) else r:InvokeServer(...) end print("[AAC] fired "..r.Name.." |",...) end) else warn("[AAC] no remote for ",...) end end
-
+local _unpack = table.unpack or unpack
+local function fire(r,...) local args={...} if r then pcall(function() if r:IsA("RemoteEvent") then r:FireServer(_unpack(args)) else r:InvokeServer(_unpack(args)) end print("[AAC] fired "..r.Name.." |", _unpack(args)) end) else warn("[AAC] no remote for ", _unpack(args)) end end
 local function loadKeys(dictName, fallback)
     for _,v in ipairs(RS:GetDescendants()) do if v.Name:lower()==dictName:lower() and v:IsA("ModuleScript") then local ok,res=pcall(require,v) if ok and type(res)=="table" then local t={} for k,_ in pairs(res) do table.insert(t,k) end if #t>3 then print("[AAC] loaded dict "..dictName.." ("..#t..")") table.sort(t) return t end end end end
     warn("[AAC] dict "..dictName.." not found, using fallback") return fallback
@@ -26,10 +24,9 @@ local allItems=loadKeys("Items",{"Sword in Stone","Giant's Greatsword","Healing 
 local achs=loadKeys("Achievements",{"Gigantomachy","Ultraviolence","A Small Favor","Hero of Elfkin"})
 local races=loadKeys("Races",{"Human","Elf","Dwarf","Kobold","Lunaeia","Withered"})
 local outs=loadKeys("Outfits",{"Adventurer","Wandering Maiden","Veteran Armor","Monk Robes"})
-
 local gui=Instance.new("ScreenGui",h) gui.Name="StatHubV2" gui.ResetOnSpawn=false
 local main=Instance.new("Frame",gui) main.Size=UDim2.new(0,640,0,460) main.Position=UDim2.new(0.5,-320,0.5,-230) main.BackgroundColor3=Color3.fromRGB(245,245,245) main.Active=true main.Draggable=true Instance.new("UICorner",main).CornerRadius=UDim.new(0,10)
-local title=Instance.new("TextLabel",main) title.Size=UDim2.new(1,0,0,28) title.BackgroundColor3=Color3.fromRGB(22,22,22) title.Text="  STAT HUB V4 • "..tostring(statRemote and statRemote.Name or "NO REMOTE") title.TextColor3=Color3.new(1,1,1) title.Font=Enum.Font.GothamBold title.TextSize=13 title.TextXAlignment=Enum.TextXAlignment.Left Instance.new("UICorner",title).CornerRadius=UDim.new(0,8)
+local title=Instance.new("TextLabel",main) title.Size=UDim2.new(1,0,0,28) title.BackgroundColor3=Color3.fromRGB(22,22,22) title.Text="  STAT HUB V4 - "..tostring(statRemote and statRemote.Name or "NO REMOTE") title.TextColor3=Color3.new(1,1,1) title.Font=Enum.Font.GothamBold title.TextSize=13 title.TextXAlignment=Enum.TextXAlignment.Left Instance.new("UICorner",title).CornerRadius=UDim.new(0,8)
 local tabBar=Instance.new("Frame",main) tabBar.Size=UDim2.new(1,0,0,32) tabBar.Position=UDim2.new(0,0,0,30) tabBar.BackgroundTransparency=1
 local content=Instance.new("Frame",main) content.Size=UDim2.new(1,-10,1,-75) content.Position=UDim2.new(0,5,0,65) content.BackgroundTransparency=1
 local tabs={"Stats","Items","Unlocks","Settings"} local pages={} local btns={}
@@ -44,5 +41,5 @@ local uSearch=Instance.new("TextBox",pages.Unlocks) uSearch.Size=UDim2.new(1,-90
 local comeKey=Enum.KeyCode.Insert local goKey=Enum.KeyCode.Delete local toggleKey=Enum.KeyCode.RightShift local waiting=nil
 local bToggle=Instance.new("TextButton",pages.Settings) bToggle.Size=UDim2.new(1,-20,0,32) bToggle.Position=UDim2.new(0,10,0,20) bToggle.BackgroundColor3=Color3.new(1,1,1) bToggle.Text="TOGGLE: RightShift" Instance.new("UICorner",bToggle).CornerRadius=UDim.new(0,8) local bCome=Instance.new("TextButton",pages.Settings) bCome.Size=UDim2.new(1,-20,0,32) bCome.Position=UDim2.new(0,10,0,58) bCome.BackgroundColor3=Color3.new(1,1,1) bCome.Text="COME (show): Insert" Instance.new("UICorner",bCome).CornerRadius=UDim.new(0,8) local bGo=Instance.new("TextButton",pages.Settings) bGo.Size=UDim2.new(1,-20,0,32) bGo.Position=UDim2.new(0,10,0,96) bGo.BackgroundColor3=Color3.new(1,1,1) bGo.Text="GO (hide): Delete" Instance.new("UICorner",bGo).CornerRadius=UDim.new(0,8)
 bToggle.MouseButton1Click:Connect(function() waiting="toggle" bToggle.Text="Press any key..." end) bCome.MouseButton1Click:Connect(function() waiting="come" bCome.Text="Press any key..." end) bGo.MouseButton1Click:Connect(function() waiting="go" bGo.Text="Press any key..." end)
-UIS.InputBegan:Connect(function(input,gp) if waiting and input.KeyCode~=Enum.KeyCode.Unknown then if waiting=="toggle" then toggleKey=input.KeyCode bToggle.Text="TOGGLE: "..toggleKey.Name elseif waiting=="come" then comeKey=input.KeyCode bCome.Text="COME (show): "..comeKey.Name else goKey=input.KeyCode bGo.Text="GO (hide): "..goKey.Name end waiting=nil title.Text="  STAT HUB V4 • "..toggleKey.Name.."/"..comeKey.Name.."/"..goKey.Name return end if not gp then if input.KeyCode==toggleKey then gui.Enabled=not gui.Enabled elseif input.KeyCode==comeKey then gui.Enabled=true elseif input.KeyCode==goKey then gui.Enabled=false end end end)
+UIS.InputBegan:Connect(function(input,gp) if waiting and input.KeyCode~=Enum.KeyCode.Unknown then if waiting=="toggle" then toggleKey=input.KeyCode bToggle.Text="TOGGLE: "..toggleKey.Name elseif waiting=="come" then comeKey=input.KeyCode bCome.Text="COME (show): "..comeKey.Name else goKey=input.KeyCode bGo.Text="GO (hide): "..goKey.Name end waiting=nil title.Text="  STAT HUB V4 - "..toggleKey.Name.."/"..comeKey.Name.."/"..goKey.Name return end if not gp then if input.KeyCode==toggleKey then gui.Enabled=not gui.Enabled elseif input.KeyCode==comeKey then gui.Enabled=true elseif input.KeyCode==goKey then gui.Enabled=false end end end)
 print("[AAC] loaded OK - if title shows NO REMOTE, use JUGG REC to find real remote")
